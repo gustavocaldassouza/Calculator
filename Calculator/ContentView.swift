@@ -66,6 +66,7 @@ struct ContentView: View {
     @State private var previousNumber: Double = 0
     @State private var operation: Operation = .none
     @State private var isTypingNumber = false
+    @State private var history: String = ""
     
     let buttons: [[CalculatorButton]] = [
         [.clear, .negative, .percent, .divide],
@@ -106,21 +107,30 @@ struct ContentView: View {
                     // Display
                     HStack {
                         Spacer()
-                        Text(display)
-                            .font(.system(size: min(72, displayHeight * 0.6)))
-                            .fontWeight(.bold)
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.white, Color(red: 0.8, green: 0.9, blue: 1.0)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
+                        VStack(alignment: .trailing, spacing: 6) {
+                            Text(history)
+                                .font(.system(size: min(20, displayHeight * 0.18)))
+                                .foregroundColor(Color.white.opacity(0.8))
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .padding(.horizontal, 4)
+
+                            Text(display)
+                                .font(.system(size: min(72, displayHeight * 0.6)))
+                                .fontWeight(.bold)
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.white, Color(red: 0.8, green: 0.9, blue: 1.0)],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
                                 )
-                            )
-                            .shadow(color: Color.blue.opacity(0.25), radius: 8, x: 0, y: 4)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.2)
-                            .padding(.horizontal, horizontalPadding)
-                            .frame(height: displayHeight)
+                                .shadow(color: Color.blue.opacity(0.25), radius: 8, x: 0, y: 4)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.2)
+                                .padding(.horizontal, horizontalPadding)
+                                .frame(height: displayHeight * 0.85)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .trailing)
 
@@ -208,6 +218,9 @@ struct ContentView: View {
             isTypingNumber = true
         }
         currentNumber = Double(display) ?? 0
+        if operation == .none {
+            history = ""
+        }
     }
     
     func decimalPressed() {
@@ -224,6 +237,7 @@ struct ContentView: View {
         previousNumber = currentNumber
         operation = op
         isTypingNumber = false
+        history = formatNumber(previousNumber) + " " + opSymbol(op)
     }
     
     func equalsPressed() {
@@ -255,7 +269,10 @@ struct ContentView: View {
         } else {
             display = String(result)
         }
-        
+        if operation != .none {
+            history = formatNumber(previousNumber) + " " + opSymbol(operation) + " " + formatNumber(currentNumber) + " ="
+        }
+
         currentNumber = result
         operation = .none
         isTypingNumber = false
@@ -267,6 +284,7 @@ struct ContentView: View {
         previousNumber = 0
         operation = .none
         isTypingNumber = false
+        history = ""
     }
     
     func negativePressed() {
@@ -281,6 +299,24 @@ struct ContentView: View {
     func percentPressed() {
         currentNumber = currentNumber / 100
         display = String(currentNumber)
+    }
+
+    func opSymbol(_ op: Operation) -> String {
+        switch op {
+        case .add: return "+"
+        case .subtract: return "-"
+        case .multiply: return "×"
+        case .divide: return "÷"
+        case .none: return ""
+        }
+    }
+
+    func formatNumber(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.maximumFractionDigits = 8
+        formatter.minimumFractionDigits = 0
+        formatter.numberStyle = .decimal
+        return formatter.string(from: NSNumber(value: value)) ?? String(value)
     }
 }
 

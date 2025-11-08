@@ -88,53 +88,69 @@ struct ContentView: View {
             )
             .edgesIgnoringSafeArea(.all)
             
-            VStack(spacing: 12) {
-                Spacer()
-                
-                // Display
-                HStack {
-                    Spacer()
-                    Text(display)
-                        .font(.system(size: 72))
-                        .fontWeight(.bold)
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.white, Color(red: 0.8, green: 0.9, blue: 1.0)],
-                                startPoint: .leading,
-                                endPoint: .trailing
+            GeometryReader { geo in
+                let horizontalPadding: CGFloat = 24
+                let spacing: CGFloat = 12
+                let columns: CGFloat = 4
+                let totalWidth = geo.size.width - horizontalPadding * 2
+                let buttonBaseWidth = (totalWidth - spacing * (columns - 1)) / columns
+
+                // Reserve a portion of height for the display area; adapt to landscape
+                let displayHeight = max(geo.size.height * 0.18, 72)
+                let availableButtonAreaHeight = geo.size.height - displayHeight - 48 // top/bottom spacing
+                let buttonBaseHeight = max(min(buttonBaseWidth, (availableButtonAreaHeight - spacing * 4) / 5), 44)
+
+                VStack(spacing: 12) {
+                    Spacer(minLength: 8)
+
+                    // Display
+                    HStack {
+                        Spacer()
+                        Text(display)
+                            .font(.system(size: min(72, displayHeight * 0.6)))
+                            .fontWeight(.bold)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.white, Color(red: 0.8, green: 0.9, blue: 1.0)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
                             )
-                        )
-                        .shadow(color: Color.blue.opacity(0.3), radius: 10, x: 0, y: 5)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                        .padding(.horizontal, 24)
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                
-                // Buttons
-                ForEach(buttons, id: \.self) { row in
-                    HStack(spacing: 12) {
-                        ForEach(row, id: \.self) { button in
-                            Button(action: {
-                                self.buttonTapped(button)
-                            }) {
-                                Text(button.rawValue)
-                                    .font(.system(size: 32))
-                                    .fontWeight(.bold)
-                                    .foregroundColor(button.foregroundColor)
-                                    .frame(
-                                        width: self.buttonWidth(button),
-                                        height: self.buttonHeight()
-                                    )
-                                    .background(button.backgroundColor)
-                                    .cornerRadius(20)
-                                    .shadow(color: button.backgroundColor.opacity(0.5), radius: 8, x: 0, y: 4)
+                            .shadow(color: Color.blue.opacity(0.25), radius: 8, x: 0, y: 4)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.2)
+                            .padding(.horizontal, horizontalPadding)
+                            .frame(height: displayHeight)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+
+                    // Buttons
+                    VStack(spacing: spacing) {
+                        ForEach(buttons, id: \.self) { row in
+                            HStack(spacing: spacing) {
+                                ForEach(row, id: \.self) { button in
+                                    let w: CGFloat = (button == .zero) ? (buttonBaseWidth * 2 + spacing) : buttonBaseWidth
+                                    Button(action: {
+                                        self.buttonTapped(button)
+                                    }) {
+                                        Text(button.rawValue)
+                                            .font(.system(size: min(32, buttonBaseHeight * 0.45)))
+                                            .fontWeight(.bold)
+                                            .foregroundColor(button.foregroundColor)
+                                            .frame(width: w, height: buttonBaseHeight)
+                                            .background(button.backgroundColor)
+                                            .cornerRadius(16)
+                                            .shadow(color: button.backgroundColor.opacity(0.45), radius: 8, x: 0, y: 4)
+                                    }
+                                }
                             }
                         }
                     }
+                    .padding(.bottom, 12)
+                    .padding(.horizontal, horizontalPadding)
                 }
+                .frame(width: geo.size.width, height: geo.size.height)
             }
-            .padding(.bottom, 24)
         }
     }
     
